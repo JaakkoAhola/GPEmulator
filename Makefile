@@ -4,7 +4,7 @@ vpath %.f90 src test include
 vpath %.f src test include
 
 MODDIR = obj
-F90FLAGS = -std=f2008 -frealloc-lhs -Wall -Wextra -Wno-compare-reals -Wno-unused-dummy-argument -O3 -I $(MODDIR) -J $(MODDIR) -I include
+F90FLAGS = -std=f2008 -frealloc-lhs -Wall -Wextra -Wno-compare-reals -Wno-unused-dummy-argument -O3 -I $(MODDIR) -J $(MODDIR) -I/usr/local/include
 F90LINKFLAGS = -lblas -llapack -lnlopt
 
 SRC = $(wildcard src/*.f90)

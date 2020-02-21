@@ -2,6 +2,8 @@ module m_cov_all
   use m_cov
   use m_cov_sqexp
   use m_cov_sqexp_param4
+  use m_cov_lin
+  use m_cov_linsqexp
 
   use m_util, only: max_name_len
 
@@ -16,6 +18,10 @@ contains
        cov_fn_name = 'SQEXP'
     type is (cov_sqexp_param4)
        cov_fn_name = 'SQEXP4PARAM'
+    type is (cov_lin)
+       cov_fn_name = 'LIN'
+    type is (cov_linsqexp)
+       cov_fn_name = 'LINSQEXP'
     class default
        cov_fn_name = 'UNKNOWN'
     end select
@@ -30,6 +36,10 @@ contains
        allocate(cov_sqexp :: CovFunction)
     case ('SQEXP4PARAM')
        allocate(cov_sqexp_param4 :: CovFunction)
+    case ('LIN')
+       allocate(cov_lin :: CovFunction)
+    case ('LINSQEXP')
+       allocate(cov_linsqexp :: CovFunction)
     case default
        print *, "unknown covariance function type, ", cov_fn_name
        stop 1
