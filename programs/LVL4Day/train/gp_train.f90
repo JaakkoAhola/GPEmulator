@@ -70,6 +70,7 @@ program gp_in
   
   read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)
   
+  close(u)
   ! Transform design and response here
 
   t = standardize(t,n)
