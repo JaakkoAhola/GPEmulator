@@ -1,5 +1,3 @@
-! train (and optionally optimize) a sparse GP from data files
-
 program gp_in
   use m_util
   use m_gp
@@ -11,9 +9,8 @@ program gp_in
 
   implicit none
 
-!  type(SparseGP) :: gp
   class(BaseGP), allocatable :: gp
-  
+
   ! number of training points, sparse points and dimension of the input
   integer :: n, nsparse, input_dimension
   ! unit number
@@ -22,9 +19,9 @@ program gp_in
   integer :: i
   ! number of hyperparameters and noise parameters required
   integer :: ntheta, nnu
-  
+
   !tmp variable
-  real(dp), dimension(51) :: res
+  real(dp), dimension(:), allocatable :: res
   real(dp), dimension(:), allocatable :: theta, nu, t, lbounds, ubounds
   real(dp), dimension(:,:), allocatable :: x
   integer, dimension(:), allocatable :: obs_type
@@ -39,16 +36,8 @@ program gp_in
   class(cov_fn), allocatable :: cf
   class(noise_model), allocatable :: nm
 
-  !namelist/DIMENSIONS/input_dimension, n, nsparse
-  !namelist/MODEL/covariance_function, noise_model_name
-  !namelist/HYPERPARAMETERS/nu, theta, lbounds, ubounds
-  !namelist/CONTROL/optimize, optimize_max_iter, optimize_ftol
-  
   input_dimension = 9
   n = 135
-  !nsparse = 60
-  
- 
 
   call string_to_cov_fn(covariance_function, cf)
   call string_to_noise_model(noise_model_name, nm)
@@ -63,7 +52,8 @@ program gp_in
   allocate(real(dp) :: t(n))
   allocate(real(dp) :: x(n,input_dimension))
   allocate(integer :: obs_type(n))
- 
+  allocate(real(dp) :: res(n))
+
   nu = 0.001
   theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5,2.4,4.3 /)
   lbounds(1) = 0.001
@@ -76,10 +66,11 @@ program gp_in
   optimize_ftol = 1.0d-7
 
 
-  open(newunit=u, file="./data/DATA")
-  
+  open(newunit=u, file="./data/DATA_TRAIN")
+
   read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)
-  
+
+  close(u)
   ! Transform design and response here
 
   t = standardize(t,n)
@@ -105,7 +96,7 @@ program gp_in
 
      allocate(gp, source=DenseGP(nu, theta, x, obs_type, t, cf, nm))
 
- 
+
   if (optimize) then
      call log_lik_optim(nnu + ntheta, gp, lbounds, ubounds, optimize_max_iter, optimize_ftol)
   else
@@ -113,7 +104,7 @@ program gp_in
      gp%nu = 0.001
      call gp%update_matrices
   end if
-  
+
   print *, gp%nu,' and ', gp%theta
 
   call gp%write_out("out.gp")
@@ -135,14 +126,14 @@ contains
 
 		res = sqrt(sum((x - meanx)**2)/(dmn-1))
 	end function std
-	 
+
 	function standardize(x,dmn) result(res)
 		integer dmn
 		real(dp) x(dmn)
 
 		real(dp), dimension(dmn) :: res
 
-		real(dp) :: meanx 
+		real(dp) :: meanx
 		real(dp) :: stdx
 
 
@@ -152,14 +143,14 @@ contains
 
 		res = (x - meanx)/stdx
 	end function standardize
-	
+
 	function logistic(x) result(res)
 	real(dp), intent(in) :: x
 	real(dp) :: res
 	res = 0.9 * x + 0.05;
 	res = log(res) - log(1-res)
 	end function logistic
-	
+
 	function logistic_vector(x,dmn) result(res)
 	integer dmn
 	real(dp)  x(dmn)
@@ -167,7 +158,7 @@ contains
 	res = 0.9 * x + 0.05
 	res = log(res) - log(1-res)
 	end function logistic_vector
-	
+
 	function inv_logistic(x) result(res)
 	real(dp), intent(in) :: x
 	real(dp) :: res
@@ -182,8 +173,3 @@ contains
 	end function inv_logistic_vector
 
 end program gp_in
-
-
-
-
-

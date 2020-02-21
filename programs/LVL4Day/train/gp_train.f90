@@ -1,5 +1,3 @@
-! train (and optionally optimize) a sparse GP from data files
-
 program gp_in
   use m_util
   use m_gp
@@ -11,7 +9,6 @@ program gp_in
 
   implicit none
 
-!  type(SparseGP) :: gp
   class(BaseGP), allocatable :: gp
   
   ! number of training points, sparse points and dimension of the input
@@ -24,7 +21,7 @@ program gp_in
   integer :: ntheta, nnu
   
   !tmp variable
-  real(dp), dimension(51) :: res
+  real(dp), dimension(:), allocatable :: res
   real(dp), dimension(:), allocatable :: theta, nu, t, lbounds, ubounds
   real(dp), dimension(:,:), allocatable :: x
   integer, dimension(:), allocatable :: obs_type
@@ -39,16 +36,8 @@ program gp_in
   class(cov_fn), allocatable :: cf
   class(noise_model), allocatable :: nm
 
-  !namelist/DIMENSIONS/input_dimension, n, nsparse
-  !namelist/MODEL/covariance_function, noise_model_name
-  !namelist/HYPERPARAMETERS/nu, theta, lbounds, ubounds
-  !namelist/CONTROL/optimize, optimize_max_iter, optimize_ftol
-  
-  input_dimension = 9
-  n = 135
-  !nsparse = 60
-  
- 
+  input_dimension = 10
+  n = 149
 
   call string_to_cov_fn(covariance_function, cf)
   call string_to_noise_model(noise_model_name, nm)
@@ -63,9 +52,10 @@ program gp_in
   allocate(real(dp) :: t(n))
   allocate(real(dp) :: x(n,input_dimension))
   allocate(integer :: obs_type(n))
+  allocate(real(dp) :: res(n))
  
   nu = 0.001
-  theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5,2.4,4.3 /)
+  theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5,2.4,4.3,3.2 /)
   lbounds(1) = 0.001
   lbounds(2:) = 0.01
   ubounds(:) = 100.0
@@ -76,7 +66,7 @@ program gp_in
   optimize_ftol = 1.0d-7
 
 
-  open(newunit=u, file="./data/DATA")
+  open(newunit=u, file="./data/DATA_TRAIN")
   
   read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)
   
@@ -101,7 +91,8 @@ program gp_in
   x(:,8) = res
     res = standardize(x(:,9),n)
   x(:,9) = res
-
+    res = standardize(x(:,10),n)
+  x(:,10) = res
 
      allocate(gp, source=DenseGP(nu, theta, x, obs_type, t, cf, nm))
 
@@ -109,7 +100,7 @@ program gp_in
   if (optimize) then
      call log_lik_optim(nnu + ntheta, gp, lbounds, ubounds, optimize_max_iter, optimize_ftol)
   else
-     gp%theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5,2.4,4.3 /)
+     gp%theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5,2.4,4.3,3.2 /)
      gp%nu = 0.001
      call gp%update_matrices
   end if
@@ -182,8 +173,3 @@ contains
 	end function inv_logistic_vector
 
 end program gp_in
-
-
-
-
-

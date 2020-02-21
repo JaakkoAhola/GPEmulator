@@ -21,7 +21,7 @@ program gp_in
   integer :: ntheta, nnu
 
   !tmp variable
-  real(dp), dimension(51) :: res
+  real(dp), dimension(:), allocatable :: res
   real(dp), dimension(:), allocatable :: theta, nu, t, lbounds, ubounds
   real(dp), dimension(:,:), allocatable :: x
   integer, dimension(:), allocatable :: obs_type
@@ -55,7 +55,7 @@ program gp_in
   allocate(real(dp) :: res(n))
 
   nu = 0.001
-  theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5,2.4,4.3 /)
+  theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612 /)
   lbounds(1) = 0.001
   lbounds(2:) = 0.01
   ubounds(:) = 100.0
@@ -93,7 +93,7 @@ program gp_in
   if (optimize) then
      call log_lik_optim(nnu + ntheta, gp, lbounds, ubounds, optimize_max_iter, optimize_ftol)
   else
-     gp%theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5,2.4 /)
+     gp%theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612 /)
      gp%nu = 0.001
      call gp%update_matrices
   end if
