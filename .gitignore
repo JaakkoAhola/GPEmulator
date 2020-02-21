@@ -1,3 +1,5 @@
 bin
 lib
 obj
+programs/LVL3Day/train/gp_train
+programs/LVL3Day/train/LOG_LIK_OPTIM
