@@ -55,7 +55,7 @@ program gp_in
   allocate(real(dp) :: res(n))
 
   nu = 0.001
-  theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5,2.4,4.3 /)
+  theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5 /)
   lbounds(1) = 0.001
   lbounds(2:) = 0.01
   ubounds(:) = 100.0
@@ -95,7 +95,7 @@ program gp_in
   if (optimize) then
      call log_lik_optim(nnu + ntheta, gp, lbounds, ubounds, optimize_max_iter, optimize_ftol)
   else
-     gp%theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5,2.4,4.3 /)
+     gp%theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612,0.5 /)
      gp%nu = 0.001
      call gp%update_matrices
   end if
