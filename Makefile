@@ -2,7 +2,7 @@
 
 vpath %.f90 src test include
 vpath %.f src test include
-
+FCO=gfortran-7
 MODDIR = obj
 F90FLAGS = -std=f2008 -frealloc-lhs -Wall -Wextra -Wno-compare-reals -Wno-unused-dummy-argument -O3 -I $(MODDIR) -J $(MODDIR) -I/usr/local/include
 F90LINKFLAGS = -lblas -llapack -lnlopt
@@ -57,7 +57,7 @@ depend:
 
 obj/%.o : %.f90
 	mkdir -p obj
-	$(FC) $(F90FLAGS) $(filter %.f90 %.F90, $^) -c -o $@
+	$(FCO) $(F90FLAGS) $(filter %.f90 %.F90, $^) -c -o $@
 
 # gfortran (usefully) doesn't update mod files (or their timestamp) if
 # nothing would change.  This can stop an unnecessary compilation
@@ -68,7 +68,7 @@ obj/%.o : %.f90
 # being run.
 obj/%.modstamp:
 	mkdir -p obj
-	$(FC) $(F90FLAGS) -fsyntax-only $(filter %.f90, $^) && touch $@
+	$(FCO) $(F90FLAGS) -fsyntax-only $(filter %.f90, $^) && touch $@
 
 .PHONY: test
 test: $(TESTOUTPUT)
