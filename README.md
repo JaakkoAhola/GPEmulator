@@ -1,5 +1,7 @@
 # GPF
 
+This code mainly originates from https://github.com/ots22/gpf/
+
 GPF is a small Fortran library for Gaussian process regression.  It currently
 implements value predictions with dense Gaussian processes, and projected-process
 approximate Gaussian processes (described by [Rasmussen and Williams, 2006, chapter 8](http://www.gaussianprocess.org/gpml/chapters/RW8.pdf)).
@@ -135,6 +137,7 @@ A noise model contains a function `noise`, taking the type of observation, the n
 and returning the variance of the noise.
 
 ## References
+Origal source codes: https://github.com/ots22/gpf/
 
 C. Rasmussen and C. Williams. Gaussian Processes for Machine Learning. Adaptative
 Computation and Machine Learning Series. MIT Press, 2006. ISBN 9780262182539.
