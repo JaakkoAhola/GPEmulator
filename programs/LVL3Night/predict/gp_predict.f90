@@ -57,13 +57,11 @@ program gp_predict
   stdx  = std(x(:,1),meanx,n)
   stdy  = std(t,meany,n)
 
-  !  lt = logistic_vector(t,n)
-  lt = t
+  lt = logistic_vector(t,n)  ! lt = identity_vector(t,n),  which is not used in matlab, currently matlab code is using identify fun, change for all logistic and inv_logistic_vector in fortrune code.
   meanlt = mean(lt,n)
   stdlt  = std(lt,meanlt,n)
 
-  !  t_p = logistic_vector(t_p,n_p)
-  t_p = t_p
+  t_p = logistic_vector(t_p,n_p)
   t_p = standardize(t_p,meanlt,stdlt,n_p)
 
   x_p(:,1) = standardize(x_p(:,1),meanx,stdx,n_p)
