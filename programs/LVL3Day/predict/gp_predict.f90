@@ -57,11 +57,13 @@ program gp_predict
   stdx  = std(x(:,1),meanx,n)
   stdy  = std(t,meany,n)
 
-  lt = logistic_vector(t,n)
+  !  lt = logistic_vector(t,n)
+  lt = t
   meanlt = mean(lt,n)
   stdlt  = std(lt,meanlt,n)
 
-  t_p = logistic_vector(t_p,n_p)
+  !  t_p = logistic_vector(t_p,n_p)
+  t_p = t_p
   t_p = standardize(t_p,meanlt,stdlt,n_p)
 
   x_p(:,1) = standardize(x_p(:,1),meanx,stdx,n_p)
@@ -87,13 +89,13 @@ program gp_predict
   x_p(:,6) = standardize(x_p(:,6),meanx,stdx,n_p)
 
   rmse = predicttestset()
-  !print *, 'rmse: ',rmse
+  print *, 'rmse: ',rmse
 
-  !print *, 'thetas: ',gp%theta
+  print *, 'thetas: ',gp%theta
 
-  !print *, 'nu: ',gp%nu
+  print *, 'nu: ',gp%nu
 
-  !print *, 'design nrows: ',size(gp%x(:,1))
+  print *, 'design nrows: ',size(gp%x(:,1))
 
 
 contains
@@ -105,9 +107,10 @@ contains
     do i = 1,n_p
        prdct = gp%predict(x_p(i,:), 0)
        rmse = rmse + ( inv_logistic(unstandardize_s(prdct,meanlt,stdlt))-inv_logistic(unstandardize_s(t_p(i),meanlt,stdlt) ) )**2
-       !print *, x_p(i,:)
-       print *, inv_logistic(unstandardize_s(prdct,meanlt,stdlt))
-       !print *, inv_logistic(unstandardize_s(t_p(i),meanlt,stdlt ) )
+       print *, x_p(i,:)
+      print *, inv_logistic(unstandardize_s(prdct,meanlt,stdlt))
+       print *, unstandardize_s(prdct,meanlt,stdlt)
+       print *, inv_logistic(unstandardize_s(t_p(i),meanlt,stdlt ) )
     end do
     rmse = rmse / n_p
     rmse = sqrt(rmse)

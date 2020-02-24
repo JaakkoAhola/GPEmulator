@@ -24,10 +24,10 @@ program gp_predict
   real(dp) :: meanlt 
   real(dp) :: stdlt
   
-  n_p = 26
-  input_dimension_p = 6
-  n = 500
-  input_dimension = 6
+  n_p = 2
+  input_dimension_p = 10
+  n = 149
+  input_dimension = 10
   
   allocate(gp, source = DenseGP(filename))
   allocate(real(dp) :: x_p(n_p,input_dimension_p))
@@ -46,7 +46,7 @@ program gp_predict
   
   close(u)
   
-  open(newunit=u, file="./data/DATA")
+  open(newunit=u, file="../train/data/DATA_TRAIN")
   
   read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)
   
@@ -88,6 +88,21 @@ program gp_predict
   stdx  = std(x(:,6),meanx,n)
   x_p(:,6) = standardize(x_p(:,6),meanx,stdx,n_p)
   
+  meanx = mean(x(:,7),n)
+  stdx  = std(x(:,7),meanx,n)
+  x_p(:,7) = standardize(x_p(:,7),meanx,stdx,n_p)
+
+  meanx = mean(x(:,8),n)
+  stdx  = std(x(:,8),meanx,n)
+  x_p(:,8) = standardize(x_p(:,8),meanx,stdx,n_p)
+
+  meanx = mean(x(:,9),n)
+  stdx  = std(x(:,9),meanx,n)
+  x_p(:,9) = standardize(x_p(:,9),meanx,stdx,n_p)
+
+  meanx = mean(x(:,10),n)
+  stdx  = std(x(:,10),meanx,n)
+  x_p(:,10) = standardize(x_p(:,10),meanx,stdx,n_p)
   rmse = predicttestset()
   print *, 'rmse: ',rmse
   
@@ -108,9 +123,9 @@ contains
        prdct = gp%predict(x_p(i,:), 0)
        rmse = rmse + ( inv_logistic(unstandardize_s(prdct,meanlt,stdlt))-inv_logistic(unstandardize_s(t_p(i),meanlt,stdlt) ) )**2 
        print *, x_p(i,:)
-!       print *, inv_logistic(unstandardize_s(prdct,meanlt,stdlt))
+      print *, inv_logistic(unstandardize_s(prdct,meanlt,stdlt))
        print *, unstandardize_s(prdct,meanlt,stdlt)
-!       print *, inv_logistic(unstandardize_s(t_p(i),meanlt,stdlt ) )
+       print *, inv_logistic(unstandardize_s(t_p(i),meanlt,stdlt ) )
     end do
     rmse = rmse / n_p
     rmse = sqrt(rmse)

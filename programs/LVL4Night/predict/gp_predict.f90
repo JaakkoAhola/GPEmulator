@@ -99,6 +99,7 @@ program gp_predict
   meanx = mean(x(:,9),n)
   stdx  = std(x(:,9),meanx,n)
   x_p(:,9) = standardize(x_p(:,9),meanx,stdx,n_p)
+
   rmse = predicttestset()
   print *, 'rmse: ',rmse
 
