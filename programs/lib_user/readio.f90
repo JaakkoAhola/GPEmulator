@@ -7,7 +7,7 @@ contains
 
         character(len=1000), intent(in) :: fileName
         real, dimension(:,:), intent(out), allocatable :: array
-        character, intent(in), optional,  :: inputDelimiter
+        character, intent(in), optional  :: inputDelimiter
 
         character :: delimiter = " "
 
@@ -18,7 +18,7 @@ contains
         integer :: ind, rows, columns
 
         if ( present(inputDelimiter)) then
-            delimeter = inputDelimiter
+            delimiter = inputDelimiter
         end if
 
         open( unit=read_unit, file= trim(fileName), iostat=ioStatus )
@@ -36,7 +36,7 @@ contains
         tmpString =trim (adjustl(line) )
 
         ! 1. count the number substrings separated by delimiter
-        columns = count( [ (tmpString(i:i), ind=1, len_trim(tmpString)) ] == delimiter) + 1
+        columns = count( [ (tmpString(ind:ind), ind=1, len_trim(tmpString)) ] == delimiter) + 1
 
         print*, "File contains ", rows, "rows"
         print*, "File contains ", columns, "columns"
