@@ -4,3 +4,5 @@ obj
 *gp_train
 *gp_predict
 *LOG_LIK_OPTIM
+*.mod
+*.o
