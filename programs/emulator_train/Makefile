@@ -1,10 +1,10 @@
 # should contain paths to NLOPT and GPF
-MOD = ../../../obj   
-LIB = ../../../lib
-LIBUSER = ../../lib_user
+MOD = ../../obj
+LIB = ../../lib
+LIBUSER = ../lib_user
 
 FC = gfortran-7
-FCFLAGS = -std=f2008 -Wall -Wextra -O3 -I$(MOD) -I$(LIBUSER)
+FCFLAGS = -std=f2008 -Wall -Wextra -fbounds-check -g -I$(MOD) -I$(LIBUSER)
 # for debug replace -O3 with -fbounds-check -g
 FCLINKFLAGS = $(LIBUSER)/readio.o -L$(LIB) -lgpf -lnlopt -llapack -lblas
 

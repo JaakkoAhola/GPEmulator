@@ -94,7 +94,7 @@ program gp_in
     !call readArray(outputfile, array)
 
     print*, array(1,1)
-    open(newunit=u, file=inputfile, iostat = ioStatusCode)
+    open(newunit=u, file=trim(inputfile), iostat = ioStatusCode)
     if ( ioStatusCode /= 0 ) stop "Error opening file"
     read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)
     close(u)

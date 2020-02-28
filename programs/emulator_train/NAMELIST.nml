@@ -1,4 +1,4 @@
 &inputoutput
-	inputfile = "data/DATA_TRAIN"
+	inputfile = "DATA_TRAIN"
 	outputfile = "out.gp"
 /
