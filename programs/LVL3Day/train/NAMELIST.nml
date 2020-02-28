@@ -1,0 +1,4 @@
+&inputoutput
+	inputfile = "data/DATA_TRAIN"
+	outputfile = "out.gp"
+/

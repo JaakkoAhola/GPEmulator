@@ -5,7 +5,7 @@ PUBLIC :: readFileDimensions, readArray
 contains
     subroutine readFileDimensions( fileName, rows, columns, inputDelimiter)
         implicit none
-
+        
         character(len=1000), intent(in) :: fileName
         integer, intent(out) :: rows, columns
         character, intent(in), optional  :: inputDelimiter
@@ -15,26 +15,21 @@ contains
         integer :: ioStatus
         integer, parameter :: read_unit = 98
         character(len=1000) :: line
-        character(len=1000):: tmpString
+        character(len=1000) :: tmpString
         integer :: ind
-
-        if ( present(inputDelimiter)) then
-            delimiter = inputDelimiter
-        else
-            delimiter = " "
-        end if
-
-
+        
+        if ( present(inputDelimiter)) delimiter = inputDelimiter
+        
         open( unit=read_unit, file= trim(fileName), iostat=ioStatus )
         if ( ioStatus /= 0 ) stop "Error opening file"
-
+        
         rows = 0
         do
             read(read_unit, '(A)', iostat=ioStatus) line
             if (ioStatus /= 0) exit
             rows = rows + 1
         end do
-
+        
         
         ! analyze how many columns
         ! 0. remove initial blanks if any

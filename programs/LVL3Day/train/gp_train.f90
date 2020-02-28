@@ -6,7 +6,7 @@ program gp_in
     use m_gp_optim
     use m_cov_all
     use m_noise_all
-    use readIO, only : readArray
+    use readIO, only : readArray, readFileDimensions
 
     implicit none
 
@@ -26,6 +26,7 @@ program gp_in
     real(dp), dimension(:), allocatable :: res
     real(dp), dimension(:), allocatable :: theta, nu, t, lbounds, ubounds
     real(dp), dimension(:,:), allocatable :: x
+    real(dp), dimension(:,:), allocatable :: array
 
     integer, dimension(:), allocatable :: obs_type
 
@@ -36,11 +37,24 @@ program gp_in
 
     character(len=max_name_len) :: covariance_function = 'LINSQEXP'
     character(len=max_name_len) :: noise_model_name    = 'VAL'
-    character(len=max_name_len) :: filename    = "./data/DATA_TRAIN"
+
+    character(len=max_name_len) :: inputfile
+    character(len=max_name_len) :: outputfile
+
+    NAMELIST /inputoutput/  &
+                          inputfile, & ! training data
+                          outputfile   ! output of executable (trained emulator)
+
+    integer :: rows, columns
 
     class(cov_fn), allocatable :: cf
     class(noise_model), allocatable :: nm
 
+
+    open  (1,status='old',file='NAMELIST.nml', iostat = ioStatusCode)
+    if ( ioStatusCode /= 0 ) stop "Error opening file"
+    read  (1, nml=inputoutput)
+    close (1)
 
     input_dimension = 7
     n = 497
@@ -71,12 +85,18 @@ program gp_in
     optimize_max_iter = 10000
     optimize_ftol = 1.0d-7
 
-    readArray(filename, array)
+    call readFileDimensions( inputfile, rows, columns, " ")
+    write(*,*) "inputfile: ", inputfile
+    write(*,*) "outputfile: ", outputfile
+    write(*,*) "rows: ", rows
+    write(*,*) "columns: ", columns
+    allocate( real(dp) :: array( rows, columns ) )
+    !call readArray(outputfile, array)
+
     print*, array(1,1)
-    open(newunit=u, file=filename, iostat = ioStatusCode)
+    open(newunit=u, file=inputfile, iostat = ioStatusCode)
     if ( ioStatusCode /= 0 ) stop "Error opening file"
     read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)
-
     close(u)
     ! Transform design and response here
 
@@ -110,7 +130,7 @@ program gp_in
 
     print *, gp%nu,' and ', gp%theta
 
-    call gp%write_out("out.gp")
+    call gp%write_out(outputfile)
 
 contains
     function mean(x,dmn) result(res)
