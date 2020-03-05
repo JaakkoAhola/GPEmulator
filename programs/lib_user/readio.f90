@@ -16,7 +16,7 @@ contains
         integer, parameter :: read_unit = 98
         character(len=1000) :: line
         character(len=1000):: tmpString
-        integer :: ind
+        integer :: ind = 1
 
         if ( present(inputDelimiter)) then
             delimiter = inputDelimiter
@@ -24,9 +24,9 @@ contains
             delimiter = " "
         end if
 
-
-        open( unit=read_unit, file= trim(fileName), iostat=ioStatus )
-        if ( ioStatus /= 0 ) stop "Error opening file"
+        write(*,*) "fileName: ", trim(fileName)
+        open( unit=read_unit, file = trim(fileName), iostat=ioStatus )
+        if ( ioStatus /= 0 ) stop "readFileDimensions: Error opening file "
 
         rows = 0
         do
@@ -35,17 +35,20 @@ contains
             rows = rows + 1
         end do
 
-        
+        print*, trim(line)
         ! analyze how many columns
         ! 0. remove initial blanks if any
         tmpString =trim (adjustl(line) )
 
         ! 1. count the number substrings separated by delimiter
         columns = count( [ (tmpString(ind:ind), ind=1, len_trim(tmpString)) ] == delimiter) + 1
-        
-    
+
+
+        print*, "rows", rows
+        print*, "columns", columns
+        print*, "end of subroutine readFileDimensions"
         close(read_unit)
-        
+
     end subroutine readFileDimensions
 
     subroutine readArray(fileName, array, inputDelimiter)

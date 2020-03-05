@@ -38,8 +38,8 @@ program gp_in
     character(len=max_name_len) :: covariance_function = 'LINSQEXP'
     character(len=max_name_len) :: noise_model_name    = 'VAL'
 
-    character(len=max_name_len) :: inputfile
-    character(len=max_name_len) :: outputfile
+    character(len=1000) :: inputfile
+    character(len=1000) :: outputfile
 
     NAMELIST /inputoutput/  &
                           inputfile, & ! training data
@@ -52,7 +52,7 @@ program gp_in
 
 
     open  (1,status='old',file='NAMELIST.nml', iostat = ioStatusCode)
-    if ( ioStatusCode /= 0 ) stop "Error opening file"
+    if ( ioStatusCode /= 0 ) stop "Error opening NAMELIST.nml file"
     read  (1, nml=inputoutput)
     close (1)
 
@@ -84,20 +84,22 @@ program gp_in
     optimize = .true.
     optimize_max_iter = 10000
     optimize_ftol = 1.0d-7
-
+    write(*,*) "inputfile: ", trim(inputfile)
+    write(*,*) "outputfile: ", trim(outputfile)
     call readFileDimensions( inputfile, rows, columns, " ")
-    write(*,*) "inputfile: ", inputfile
-    write(*,*) "outputfile: ", outputfile
+
     write(*,*) "rows: ", rows
     write(*,*) "columns: ", columns
+    stop
     allocate( real(dp) :: array( rows, columns ) )
     !call readArray(outputfile, array)
 
-    print*, array(1,1)
-    open(newunit=u, file=trim(inputfile), iostat = ioStatusCode)
+    !print*, array(1,1)
+    open(newunit=u, file=inputfile, iostat = ioStatusCode)
     if ( ioStatusCode /= 0 ) stop "Error opening file"
     read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)
     close(u)
+
     ! Transform design and response here
 
     t = standardize(t,n)

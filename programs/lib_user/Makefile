@@ -1,5 +1,5 @@
 FCO = gfortran-7
-F90FLAGS = -std=f2008 -Wall -Wextra -O2 -g
+F90FLAGS = -std=f2008 -Wall -Wextra -fbounds-check -g 
 
 readio: readio.f90
 	$(FCO) -c $(F90FLAGS) readio.f90

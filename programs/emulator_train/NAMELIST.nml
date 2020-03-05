@@ -1,4 +1,4 @@
 &inputoutput
-	inputfile = "DATA_TRAIN"
+	inputfile = "/home/aholaj/OneDrive/000_WORK/000_Codex/GPEmulator/programs/emulator_train/LVL3Day_DATA"
 	outputfile = "out.gp"
 /
