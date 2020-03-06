@@ -61,13 +61,14 @@ contains
 
     end subroutine readFileDimensions
 
-    subroutine readArray(fileName, array, inputDelimiter)
+    subroutine readArray(fileName, array, inputDelimiter, usePrinting)
 
         implicit none
 
         character(len=1000), intent(in) :: fileName
         real(kind = 8), dimension(:,:), intent(out), allocatable :: array
         character, intent(in), optional  :: inputDelimiter
+        logical, intent(in), optional    :: usePrinting
 
         character :: delimiter = " "
 
@@ -75,16 +76,24 @@ contains
         integer, parameter :: read_unit = 99
 
         integer :: rows, columns
+        logical :: usePrintingLocal = .FALSE.
 
         if ( present(inputDelimiter)) then
             delimiter = inputDelimiter
         end if
 
+        if ( present(usePrinting)) then
+            usePrintingLocal = usePrinting
+        else
+            usePrintingLocal = .FALSE.
+        end if
 
-        call readFileDimensions( fileName, rows, columns, delimiter, .TRUE.)
+        call readFileDimensions( fileName, rows, columns, delimiter, usePrintingLocal)
 
-        print*, "readArray File contains ", rows, "rows"
-        print*, "readArray File contains ", columns, "columns"
+        if (usePrintingLocal) then
+            print*, "readArray File contains ", rows, "rows"
+            print*, "readArray File contains ", columns, "columns"
+        end if
 
         allocate(array(rows,columns))
 

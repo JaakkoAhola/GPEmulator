@@ -86,6 +86,7 @@ program gp_in
     optimize_ftol = 1.0d-7
     write(*,*) "inputfile: ", trim(inputfile)
     write(*,*) "outputfile: ", trim(outputfile)
+
     call readFileDimensions( inputfile, rows, columns, " ", .false.)
 
     write(*,*) "rows: ", rows
