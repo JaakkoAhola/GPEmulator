@@ -86,15 +86,16 @@ program gp_in
     optimize_ftol = 1.0d-7
     write(*,*) "inputfile: ", trim(inputfile)
     write(*,*) "outputfile: ", trim(outputfile)
-    call readFileDimensions( inputfile, rows, columns, " ")
+    call readFileDimensions( inputfile, rows, columns, " ", .false.)
 
     write(*,*) "rows: ", rows
     write(*,*) "columns: ", columns
-    stop
-    allocate( real(dp) :: array( rows, columns ) )
-    !call readArray(outputfile, array)
 
-    !print*, array(1,1)
+    allocate( real(dp) :: array( rows, columns ) )
+    call readArray(inputfile, array)
+
+    print*, "array(1,1)", array(1,1)
+    stop
     open(newunit=u, file=inputfile, iostat = ioStatusCode)
     if ( ioStatusCode /= 0 ) stop "Error opening file"
     read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)

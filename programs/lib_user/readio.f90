@@ -3,12 +3,13 @@ module readIO
 PUBLIC :: readFileDimensions, readArray
 
 contains
-    subroutine readFileDimensions( fileName, rows, columns, inputDelimiter)
+    subroutine readFileDimensions( fileName, rows, columns, inputDelimiter, usePrinting)
         implicit none
 
         character(len=1000), intent(in) :: fileName
         integer, intent(out) :: rows, columns
         character, intent(in), optional  :: inputDelimiter
+        logical, intent(in), optional    :: usePrinting
 
         character :: delimiter = " "
 
@@ -17,6 +18,7 @@ contains
         character(len=1000) :: line
         character(len=1000):: tmpString
         integer :: ind = 1
+        logical :: usePrintingLocal = .FALSE.
 
         if ( present(inputDelimiter)) then
             delimiter = inputDelimiter
@@ -24,7 +26,13 @@ contains
             delimiter = " "
         end if
 
-        write(*,*) "fileName: ", trim(fileName)
+        if ( present(usePrinting)) then
+            usePrintingLocal = usePrinting
+        else
+            usePrintingLocal = .FALSE.
+        end if
+
+        if ( usePrintingLocal ) write(*,*) "readFileDimensions fileName: ", trim(fileName)
         open( unit=read_unit, file = trim(fileName), iostat=ioStatus )
         if ( ioStatus /= 0 ) stop "readFileDimensions: Error opening file "
 
@@ -35,7 +43,7 @@ contains
             rows = rows + 1
         end do
 
-        print*, trim(line)
+        if ( usePrintingLocal ) print*, trim(line)
         ! analyze how many columns
         ! 0. remove initial blanks if any
         tmpString =trim (adjustl(line) )
@@ -43,10 +51,12 @@ contains
         ! 1. count the number substrings separated by delimiter
         columns = count( [ (tmpString(ind:ind), ind=1, len_trim(tmpString)) ] == delimiter) + 1
 
+        if ( usePrintingLocal ) then
+            print*, "rows", rows
+            print*, "columns", columns
+            print*, "end of subroutine readFileDimensions"
+        end if
 
-        print*, "rows", rows
-        print*, "columns", columns
-        print*, "end of subroutine readFileDimensions"
         close(read_unit)
 
     end subroutine readFileDimensions
@@ -56,7 +66,7 @@ contains
         implicit none
 
         character(len=1000), intent(in) :: fileName
-        real, dimension(:,:), intent(out), allocatable :: array
+        real(kind = 8), dimension(:,:), intent(out), allocatable :: array
         character, intent(in), optional  :: inputDelimiter
 
         character :: delimiter = " "
@@ -70,17 +80,16 @@ contains
             delimiter = inputDelimiter
         end if
 
-        open( unit=read_unit, file= trim(fileName), iostat=ioStatus )
-        if ( ioStatus /= 0 ) stop "Error opening file"
 
-        call readFileDimensions( fileName, rows, columns, delimiter)
+        call readFileDimensions( fileName, rows, columns, delimiter, .TRUE.)
 
-        print*, "File contains ", rows, "rows"
-        print*, "File contains ", columns, "columns"
+        print*, "readArray File contains ", rows, "rows"
+        print*, "readArray File contains ", columns, "columns"
 
         allocate(array(rows,columns))
 
-        rewind(read_unit)
+        open( unit=read_unit, file= trim(fileName), iostat=ioStatus )
+        if ( ioStatus /= 0 ) stop "Error opening file"
 
         read(read_unit,*) array
 
