@@ -75,7 +75,7 @@ contains
         integer :: ioStatus
         integer, parameter :: read_unit = 99
 
-        integer :: rows, columns
+        integer :: rowInd, columnInd, rows, columns
         logical :: usePrintingLocal = .FALSE.
 
         if ( present(inputDelimiter)) then
@@ -100,7 +100,14 @@ contains
         open( unit=read_unit, file= trim(fileName), iostat=ioStatus )
         if ( ioStatus /= 0 ) stop "Error opening file"
 
-        read(read_unit,*) array
+        do rowInd = 1,rows
+            read(read_unit,*) (array(rowInd,columnInd),columnInd=1,columns)
+        end do
+
+        if (usePrintingLocal) then
+            print*, "array(1,:)", array(1,:)
+            print*, "array(2,:)", array(2,:)
+        end if
 
         close(read_unit)
     end subroutine readArray

@@ -12,23 +12,24 @@ program gp_in
 
     class(BaseGP), allocatable :: gp
 
-    ! number of training points, sparse points and dimension of the input
-    integer :: n, nsparse, input_dimension
-    ! unit number
-    integer :: u
+    ! number of training points, dimension of the input, dimension of design
+    integer :: input_sample_size, input_dimension, input_design_dimension
+
     ! loop counter
-    integer :: i
+    integer :: ind
     ! number of hyperparameters and noise parameters required
     integer :: ntheta, nnu
 
     integer :: ioStatusCode
 
-    real(dp), dimension(:), allocatable :: res
-    real(dp), dimension(:), allocatable :: theta, nu, t, lbounds, ubounds
-    real(dp), dimension(:,:), allocatable :: x
+    real(dp), dimension(:), allocatable :: tmpArray
+    real(dp), dimension(:), allocatable :: theta, nu, response, lbounds, ubounds
+    real(dp), dimension(:,:), allocatable :: design
     real(dp), dimension(:,:), allocatable :: array
 
     integer, dimension(:), allocatable :: obs_type
+
+    real(dp), dimension(12) :: tmpTheta = (/0.9010, 0.9650, 0.6729, 3.5576, 4.7418, 1.2722, 4.0612, 1.5, 0.5, 2.4, 4.3, 3.2 /)
 
     logical :: optimize
 
@@ -40,12 +41,14 @@ program gp_in
 
     character(len=1000) :: inputfile
     character(len=1000) :: outputfile
+    character(len=1) :: separator
+    logical :: debugFlag
 
     NAMELIST /inputoutput/  &
                           inputfile, & ! training data
-                          outputfile   ! output of executable (trained emulator)
-
-    integer :: rows, columns
+                          outputfile, & ! output of executable (trained emulator)
+                          separator,  & ! separator of data file
+                          debugFlag
 
     class(cov_fn), allocatable :: cf
     class(noise_model), allocatable :: nm
@@ -56,8 +59,16 @@ program gp_in
     read  (1, nml=inputoutput)
     close (1)
 
-    input_dimension = 7
-    n = 497
+    write(*,*) "inputfile: ", trim(inputfile)
+    write(*,*) "outputfile: ", trim(outputfile)
+
+    call readFileDimensions( inputfile, input_sample_size, input_dimension, separator, debugFlag)
+
+    write(*,*) "rows: ", input_sample_size
+    write(*,*) "columns: ", input_dimension
+    input_design_dimension = input_dimension-2
+
+    allocate( real(dp) :: array( input_sample_size, input_dimension ) )
 
     call string_to_cov_fn(covariance_function, cf)
     call string_to_noise_model(noise_model_name, nm)
@@ -69,13 +80,14 @@ program gp_in
     allocate(real(dp) :: theta(ntheta))
     allocate(real(dp) :: lbounds(nnu + ntheta))
     allocate(real(dp) :: ubounds(nnu + ntheta))
-    allocate(real(dp) :: t(n))
-    allocate(real(dp) :: x(n,input_dimension))
-    allocate(integer :: obs_type(n))
-    allocate(real(dp) :: res(n))
+    allocate(real(dp) :: response(input_sample_size))
+    allocate(real(dp) :: design(input_sample_size,input_design_dimension))
+    allocate(integer :: obs_type(input_sample_size))
+    allocate(real(dp) :: tmpArray(input_sample_size))
 
     nu = 0.001
-    theta = (/ 0.9010,0.9650,0.6729,3.5576,4.7418,1.2722,4.0612, 1.5 /)
+    theta = tmpTheta(1:input_design_dimension+1)
+    if (debugFlag) print*, "theta", theta
     lbounds(1) = 0.001
     lbounds(2:) = 0.01
     ubounds(:) = 100.0
@@ -84,46 +96,37 @@ program gp_in
     optimize = .true.
     optimize_max_iter = 10000
     optimize_ftol = 1.0d-7
-    write(*,*) "inputfile: ", trim(inputfile)
-    write(*,*) "outputfile: ", trim(outputfile)
 
-    call readFileDimensions( inputfile, rows, columns, " ", .false.)
+    call readArray(inputfile, array, separator, debugFlag)
 
-    write(*,*) "rows: ", rows
-    write(*,*) "columns: ", columns
+    if (debugFlag) then
+        print*, "array(1,:)", array(1,:)
+        print*, "array(2,:)", array(2,:)
+        print*, "shape design", shape(design)
+        print*, "shape array", shape(array)
+    end if
 
-    allocate( real(dp) :: array( rows, columns ) )
-    call readArray(inputfile, array)
+    design(:,:) = array(:, 1:input_design_dimension)
+    obs_type(:) = int(array(:, input_dimension-1 ))
+    response(:) = array(:, input_dimension)
 
-    print*, "array(1,1)", array(1,1)
-    stop
-    open(newunit=u, file=inputfile, iostat = ioStatusCode)
-    if ( ioStatusCode /= 0 ) stop "Error opening file"
-    read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)
-    close(u)
+    if ( debugFlag ) then
+        print*, "100's design second variable", design(100, 2)
+        print*, "100's obs type", obs_type(100)
+        print*, "100's response", response(100)
+        print*, "100's array", array(100,:)
+    end if
 
     ! Transform design and response here
+    response = standardize(response,input_sample_size)
+    do ind=1,input_design_dimension
+        tmpArray = standardize( design(:,ind), input_sample_size )
+        design(:,ind) = tmpArray
+    end do
 
-    t = standardize(t,n)
-    res = standardize(x(:,1),n)
-    x(:,1) = res
-    res = standardize(x(:,2),n)
-    x(:,2) = res
-    res = standardize(x(:,3),n)
-    x(:,3) = res
-    res = standardize(x(:,4),n)
-    x(:,4) = res
-    res = standardize(x(:,5),n)
-    x(:,5) = res
-    res = standardize(x(:,6),n)
-    x(:,6) = res
-    res = standardize(x(:,7),n)
-    x(:,7) = res
+    allocate(gp, source=DenseGP(nu, theta, design, obs_type, response, cf, nm))
 
-
-    allocate(gp, source=DenseGP(nu, theta, x, obs_type, t, cf, nm))
-
-
+    
     if (optimize) then
         call log_lik_optim(nnu + ntheta, gp, lbounds, ubounds, optimize_max_iter, optimize_ftol)
     else

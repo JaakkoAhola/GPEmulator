@@ -4,7 +4,7 @@ LIB = ../../lib
 LIBUSER = ../lib_user
 
 FC = gfortran-7
-FCFLAGS = -std=f2008 -Wall -Wextra -fbounds-check -g -I$(MOD) -I$(LIBUSER)
+FCFLAGS = -std=f2008 -Wall -Wextra -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow,denormal -fbounds-check -g -I$(MOD) -I../../include -I$(LIBUSER)
 # for debug replace -O3 with -fbounds-check -g
 FCLINKFLAGS = $(LIBUSER)/readio.o -L$(LIB) -lgpf -lnlopt -llapack -lblas
 
