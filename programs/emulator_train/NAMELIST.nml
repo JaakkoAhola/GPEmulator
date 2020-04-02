@@ -1,6 +1,6 @@
 &inputoutput
-	inputfile = "/home/aholaj/OneDrive/000_WORK/EMULATOR/cfrac_MAP/train/data/DATA"
+	inputfile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL4Night/LVL4Night_DATA"
 	outputfile = "out.gp"
 	separator  = " "
-	debugFlag  = .FALSE.
+	debugFlag  = .TRUE.
 /

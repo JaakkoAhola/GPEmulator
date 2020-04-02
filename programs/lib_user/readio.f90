@@ -64,9 +64,9 @@ contains
     subroutine readArray(fileName, array, inputDelimiter, usePrinting)
 
         implicit none
-
+        integer, parameter ::  dp = selected_real_kind(14,100)
         character(len=1000), intent(in) :: fileName
-        real(kind = 8), dimension(:,:), intent(out), allocatable :: array
+        real(dp), dimension(:,:), intent(out), allocatable :: array
         character, intent(in), optional  :: inputDelimiter
         logical, intent(in), optional    :: usePrinting
 

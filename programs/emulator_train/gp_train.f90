@@ -73,8 +73,8 @@ program gp_in
     call string_to_cov_fn(covariance_function, cf)
     call string_to_noise_model(noise_model_name, nm)
 
-    nnu = nm%nparams_required(input_dimension)
-    ntheta = cf%ntheta_required(input_dimension)
+    nnu = nm%nparams_required(input_design_dimension)
+    ntheta = cf%ntheta_required(input_design_dimension)
 
     allocate(real(dp) :: nu(nnu))
     allocate(real(dp) :: theta(ntheta))
@@ -110,12 +110,7 @@ program gp_in
     obs_type(:) = int(array(:, input_dimension-1 ))
     response(:) = array(:, input_dimension)
 
-    if ( debugFlag ) then
-        print*, "100's design second variable", design(100, 2)
-        print*, "100's obs type", obs_type(100)
-        print*, "100's response", response(100)
-        print*, "100's array", array(100,:)
-    end if
+
 
     ! Transform design and response here
     response = standardize(response,input_sample_size)
@@ -124,9 +119,22 @@ program gp_in
         design(:,ind) = tmpArray
     end do
 
+    if ( debugFlag ) then
+        print*, "100's design second variable", design(100, 2)
+        print*, "100's obs type", obs_type(100)
+        print*, "100's response", response(100)
+        print*, "100's array", array(100,:)
+        print*, "nnu", nnu
+        print*, "ntheta", ntheta
+        print*, "lbounds", lbounds
+        print*, "ubounds", ubounds
+        print*, "optimize_max_iter", optimize_max_iter
+        print*, "optimize_ftol", optimize_ftol
+    end if
+    !stop
     allocate(gp, source=DenseGP(nu, theta, design, obs_type, response, cf, nm))
 
-    
+
     if (optimize) then
         call log_lik_optim(nnu + ntheta, gp, lbounds, ubounds, optimize_max_iter, optimize_ftol)
     else

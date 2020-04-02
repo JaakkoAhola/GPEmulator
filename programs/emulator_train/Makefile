@@ -3,10 +3,9 @@ MOD = ../../obj
 LIB = ../../lib
 LIBUSER = ../lib_user
 
-FC = gfortran-7
-FCFLAGS = -std=f2008 -Wall -Wextra -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow,denormal -fbounds-check -g -I$(MOD) -I../../include -I$(LIBUSER)
-# for debug replace -O3 with -fbounds-check -g
-FCLINKFLAGS = $(LIBUSER)/readio.o -L$(LIB) -lgpf -lnlopt -llapack -lblas
+FCFLAGS = -std=f2008 -Wall -Wextra -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow,denormal -fbounds-check -g -I$(MOD) -I../../include -I$(LIBUSER) -I/usr/local/include
+# for debug replace -O3 with -fbounds-check -g -ffpe-trap=invalid,zero,overflow,underflow,denormal
+FCLINKFLAGS = $(LIBUSER)/readio.o -L$(LIB) -L/usr/local/lib -lgpf -lnlopt -llapack -lblas
 
 gp_train: gp_train.o
 	$(FC) -o $@ $^ $(FCFLAGS) $(FCLINKFLAGS)
