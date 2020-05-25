@@ -1,12 +1,19 @@
 # should contain paths to NLOPT and GPF
-MOD = ../../../obj
-LIB = ../../../lib
+MOD = ../../obj
+LIB = ../../lib
+LIBUSER = ../lib_user
 
-FCO = gfortran-7
-F90FLAGS = -std=f2008 -Wall -Wextra -O3 $(addprefix -I,$(MOD))
-F90LINKFLAGS =  $(addprefix -L,$(LIB)) -lgpf -lnlopt -llapack -lblas
+FCFLAGS = -std=f2008 -Wall -Wextra -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow,denormal -fbounds-check -g -I$(MOD) -I../../include -I$(LIBUSER) -I/usr/local/include
+# for debug replace -O3 with -fbounds-check -g -ffpe-trap=invalid,zero,overflow,underflow,denormal
+FCLINKFLAGS = $(LIBUSER)/readio.o -L$(LIB) -L/usr/local/lib -lgpf -lnlopt -llapack -lblas
 
 gp_predict: gp_predict.f90
-	$(FCO) $(F90FLAGS) -o gp_predict gp_predict.f90 $(F90LINKFLAGS) -fbounds-check
+	$(FC) -o $@ $^ $(FCFLAGS) $(FCLINKFLAGS)
+
+%.o : %.f90
+	$(FC) -c $(FCFLAGS) $<
+
+.PHONY: clean
+
 clean:
-	rm gp_predict
+	rm -f gp_predict *.o
