@@ -1,0 +1,8 @@
+&inputoutput
+	inputFileTrainingData = "DATA_TRAIN"
+	gpTrainingDataFile = "../emulator_train/out.gp"
+	inputFilePredictionData = "DATA_PREDICT"
+
+	separator  = " "
+	debugFlag  = .TRUE.
+/
