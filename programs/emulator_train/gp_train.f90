@@ -29,7 +29,8 @@ program gp_in
 
     integer, dimension(:), allocatable :: obs_type
 
-    real(dp), dimension(12) :: tmpTheta = (/0.9010, 0.9650, 0.6729, 3.5576, 4.7418, 1.2722, 4.0612, 1.5, 0.5, 2.4, 4.3, 3.2 /)
+    real(dp), dimension(16) :: tmpTheta = (/0.9010, 0.9650, 0.6729, 3.5576, 4.7418, 1.2722, &
+     4.0612, 0.5, 2.4, 4.3, 3.2, 1.5, 0.5, 2.4, 4.3, 3.2 /)
 
     logical :: optimize
 
