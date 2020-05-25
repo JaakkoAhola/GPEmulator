@@ -1,5 +1,5 @@
 &inputoutput
-	inputfile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL4Night/LVL4Night_DATA"
+	inputfile = "DATA_TRAIN"
 	outputfile = "out.gp"
 	separator  = " "
 	debugFlag  = .TRUE.
