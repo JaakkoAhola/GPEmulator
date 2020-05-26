@@ -1,7 +1,7 @@
 &inputoutput
-	inputFileTrainingData = "DATA_TRAIN"
-	gpTrainingDataFile = "../emulator_train/out.gp"
-	inputFilePredictionData = "DATA_PREDICT"
+	trainingDataInputFile = "DATA_TRAIN"
+	trainedEmulatorGPFile = "../emulator_train/out.gp"
+	predictionDataInputFile = "DATA_PREDICT"
 
 	separator  = " "
 	debugFlag  = .TRUE.

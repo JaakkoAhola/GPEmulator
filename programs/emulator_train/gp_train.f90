@@ -13,7 +13,7 @@ program gp_in
     class(BaseGP), allocatable :: gp
 
     ! number of training points, dimension of the input, dimension of design
-    integer :: input_sample_size, input_dimension, input_design_dimension
+    integer :: trainingSampleSize, trainingDimensionSize, designDimensionSize
 
     ! loop counter
     integer :: ind
@@ -23,11 +23,11 @@ program gp_in
     integer :: ioStatusCode
 
     real(dp), dimension(:), allocatable :: tmpArray
-    real(dp), dimension(:), allocatable :: theta, nu, response, lbounds, ubounds
-    real(dp), dimension(:,:), allocatable :: design
-    real(dp), dimension(:,:), allocatable :: array
+    real(dp), dimension(:), allocatable :: theta, nu, responseVector, lbounds, ubounds
+    real(dp), dimension(:,:), allocatable :: designMatrix
+    real(dp), dimension(:,:), allocatable :: trainingDataMatrix
 
-    integer, dimension(:), allocatable :: obs_type
+    integer, dimension(:), allocatable :: trainingDataObservationTypeVector
 
     real(dp), dimension(16) :: tmpTheta = (/0.9010, 0.9650, 0.6729, 3.5576, 4.7418, 1.2722, &
      4.0612, 0.5, 2.4, 4.3, 3.2, 1.5, 0.5, 2.4, 4.3, 3.2 /)
@@ -40,14 +40,14 @@ program gp_in
     character(len=max_name_len) :: covariance_function = 'LINSQEXP'
     character(len=max_name_len) :: noise_model_name    = 'VAL'
 
-    character(len=1000) :: inputfile
-    character(len=1000) :: outputfile
+    character(len=1000) :: trainingDataInputFile
+    character(len=1000) :: trainedEmulatorGPFile
     character(len=1) :: separator
     logical :: debugFlag
 
     NAMELIST /inputoutput/  &
-                          inputfile, & ! training data
-                          outputfile, & ! output of executable (trained emulator)
+                          trainingDataInputFile, & ! training data
+                          trainedEmulatorGPFile, & ! output of executable (trained emulator)
                           separator,  & ! separator of data file
                           debugFlag
 
@@ -60,34 +60,34 @@ program gp_in
     read  (1, nml=inputoutput)
     close (1)
 
-    write(*,*) "inputfile: ", trim(inputfile)
-    write(*,*) "outputfile: ", trim(outputfile)
+    write(*,*) "trainingDataInputFile: ", trim(trainingDataInputFile)
+    write(*,*) "trainedEmulatorGPFile: ", trim(trainedEmulatorGPFile)
 
-    call readFileDimensions( inputfile, input_sample_size, input_dimension, separator, debugFlag)
+    call readFileDimensions( trainingDataInputFile, trainingSampleSize, trainingDimensionSize, separator, debugFlag)
 
-    write(*,*) "rows: ", input_sample_size
-    write(*,*) "columns: ", input_dimension
-    input_design_dimension = input_dimension-2
+    write(*,*) "rows: ", trainingSampleSize
+    write(*,*) "columns: ", trainingDimensionSize
+    designDimensionSize = trainingDimensionSize-2
 
-    allocate( real(dp) :: array( input_sample_size, input_dimension ) )
+    allocate( real(dp) :: trainingDataMatrix( trainingSampleSize, trainingDimensionSize ) )
 
     call string_to_cov_fn(covariance_function, cf)
     call string_to_noise_model(noise_model_name, nm)
 
-    nnu = nm%nparams_required(input_design_dimension)
-    ntheta = cf%ntheta_required(input_design_dimension)
+    nnu = nm%nparams_required(designDimensionSize)
+    ntheta = cf%ntheta_required(designDimensionSize)
 
     allocate(real(dp) :: nu(nnu))
     allocate(real(dp) :: theta(ntheta))
     allocate(real(dp) :: lbounds(nnu + ntheta))
     allocate(real(dp) :: ubounds(nnu + ntheta))
-    allocate(real(dp) :: response(input_sample_size))
-    allocate(real(dp) :: design(input_sample_size,input_design_dimension))
-    allocate(integer :: obs_type(input_sample_size))
-    allocate(real(dp) :: tmpArray(input_sample_size))
+    allocate(real(dp) :: responseVector(trainingSampleSize))
+    allocate(real(dp) :: designMatrix(trainingSampleSize,designDimensionSize))
+    allocate(integer :: trainingDataObservationTypeVector(trainingSampleSize))
+    allocate(real(dp) :: tmpArray(trainingSampleSize))
 
     nu = 0.001
-    theta = tmpTheta(1:input_design_dimension+1)
+    theta = tmpTheta(1:designDimensionSize+1)
     if (debugFlag) print*, "theta", theta
     lbounds(1) = 0.001
     lbounds(2:) = 0.01
@@ -98,33 +98,33 @@ program gp_in
     optimize_max_iter = 10000
     optimize_ftol = 1.0d-7
 
-    call readArray(inputfile, array, separator, debugFlag)
+    call readArray(trainingDataInputFile, trainingDataMatrix, separator, debugFlag)
 
     if (debugFlag) then
-        print*, "array(1,:)", array(1,:)
-        print*, "array(2,:)", array(2,:)
-        print*, "shape design", shape(design)
-        print*, "shape array", shape(array)
+        print*, "trainingDataMatrix(1,:)", trainingDataMatrix(1,:)
+        print*, "trainingDataMatrix(2,:)", trainingDataMatrix(2,:)
+        print*, "shape designMatrix", shape(designMatrix)
+        print*, "shape trainingDataMatrix", shape(trainingDataMatrix)
     end if
 
-    design(:,:) = array(:, 1:input_design_dimension)
-    obs_type(:) = int(array(:, input_dimension-1 ))
-    response(:) = array(:, input_dimension)
+    designMatrix(:,:) = trainingDataMatrix(:, 1:designDimensionSize)
+    trainingDataObservationTypeVector(:) = int(trainingDataMatrix(:, trainingDimensionSize-1 ))
+    responseVector(:) = trainingDataMatrix(:, trainingDimensionSize)
 
 
 
     ! Transform design and response here
-    response = standardize(response,input_sample_size)
-    do ind=1,input_design_dimension
-        tmpArray = standardize( design(:,ind), input_sample_size )
-        design(:,ind) = tmpArray
+    responseVector = standardize(responseVector,trainingSampleSize)
+    do ind=1,designDimensionSize
+        tmpArray = standardize( designMatrix(:,ind), trainingSampleSize )
+        designMatrix(:,ind) = tmpArray
     end do
 
     if ( debugFlag ) then
-        print*, "100's design second variable", design(100, 2)
-        print*, "100's obs type", obs_type(100)
-        print*, "100's response", response(100)
-        print*, "100's array", array(100,:)
+        print*, "100's design second variable", designMatrix(100, 2)
+        print*, "100's obs type", trainingDataObservationTypeVector(100)
+        print*, "100's response", responseVector(100)
+        print*, "100's trainingDataMatrix", trainingDataMatrix(100,:)
         print*, "nnu", nnu
         print*, "ntheta", ntheta
         print*, "lbounds", lbounds
@@ -133,7 +133,7 @@ program gp_in
         print*, "optimize_ftol", optimize_ftol
     end if
     !stop
-    allocate(gp, source=DenseGP(nu, theta, design, obs_type, response, cf, nm))
+    allocate(gp, source=DenseGP(nu, theta, designMatrix, trainingDataObservationTypeVector, responseVector, cf, nm))
 
 
     if (optimize) then
@@ -146,7 +146,7 @@ program gp_in
 
     print *, gp%nu,' and ', gp%theta
 
-    call gp%write_out(outputfile)
+    call gp%write_out(trainedEmulatorGPFile)
 
 contains
     function mean(x,dmn) result(res)

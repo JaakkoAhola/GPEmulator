@@ -8,9 +8,16 @@ program gp_predict
 
   class(BaseGP), allocatable :: gp
 
+  character(len=1000) :: trainingDataInputFile
+  character(len=1000) :: trainedEmulatorGPFile
+  character(len=1000) :: predictionDataInputFile
+  character(len=1) :: separator
+  logical :: debugFlag
+
   NAMELIST /inputoutput/  &
-                      inputFileTrainingData, & ! training data
-                      gpTrainingDataFile, & ! gp data of emulator training
+                      trainingDataInputFile, & ! training data
+                      trainedEmulatorGPFile, & ! gp data of emulator training
+                      predictionDataInputFile, & ! prediction data, i.e. points where you want your emulator to be used
                       separator,  & ! separator of data file
                       debugFlag
 
@@ -18,12 +25,11 @@ program gp_predict
   integer u,i
 
   character(len=max_name_len) label
-  character(len=*), parameter :: filename = '../train/out.gp'
-  real(dp), dimension(:,:), allocatable :: x_p,x
-  integer, dimension(:), allocatable :: obs_type,obs_type_p
-  real(dp), dimension(:), allocatable :: t,t_p,lt
-  integer :: prediction_sample_size, prediction_dimension
-  integer :: n, input_dimension
+  real(dp), dimension(:,:), allocatable :: predictionDataMatrix,designMatrix
+  integer, dimension(:), allocatable :: trainingDataObservationTypeVector,predictionDataObservationTypeVector
+  real(dp), dimension(:), allocatable :: responseVector,predictionLastVector,lt
+  integer :: predictionSampleSize, predictionDimensionSize
+  integer :: trainingSampleSize, designDimensionSize
   real(dp) :: meanx
   real(dp) :: stdx
   real(dp) :: meany
@@ -32,75 +38,75 @@ program gp_predict
   real(dp) :: meanlt
   real(dp) :: stdlt
 
-  ! prediction_sample_size = 2
-  ! prediction_dimension = 7
-  ! n = 497
-  ! input_dimension = 7
+  ! predictionSampleSize = 2
+  ! predictionDimensionSize = 7
+  ! trainingSampleSize = 497
+  ! designDimensionSize = 7
 
-  allocate(gp, source = DenseGP(filename))
-  allocate(real(dp) :: x_p(prediction_sample_size,prediction_dimension))
-  allocate(real(dp) :: t_p(prediction_sample_size))
-  allocate(real(dp) :: t(n))
-  allocate(real(dp) :: lt(n))
-  allocate(real(dp) :: x(n,input_dimension))
-  allocate(integer :: obs_type(n))
-  allocate(integer :: obs_type_p(prediction_sample_size))
+  allocate(gp, source = DenseGP(trainedEmulatorGPFile))
+  allocate(real(dp) :: predictionDataMatrix( predictionSampleSize,predictionDimensionSize ) )
+  allocate(real(dp) :: predictionLastVector(predictionSampleSize))
+  allocate(real(dp) :: responseVector(trainingSampleSize))
+  allocate(real(dp) :: lt(trainingSampleSize))
+  allocate(real(dp) :: designMatrix(trainingSampleSize,designDimensionSize))
+  allocate(integer :: trainingDataObservationTypeVector(trainingSampleSize))
+  allocate(integer :: predictionDataObservationTypeVector(predictionSampleSize))
 
   open  (1,status='old',file='NAMELIST.nml', iostat = ioStatusCode)
   if ( ioStatusCode /= 0 ) stop "Error opening NAMELIST.nml file"
   read  (1, nml=inputoutput)
   close (1)
 
-  call readFileDimensions( inputFilePredictionData, prediction_sample_size, prediction_dimension, separator, debugFlag)
+  call readFileDimensions( predictionDataInputFile, predictionSampleSize, predictionDimensionSize, separator, debugFlag)
 
-  call readFileDimensions( inputFileTrainingData, input_sample_size, input_dimension, separator, debugFlag)
+  call readFileDimensions( trainingDataInputFile, trainingSampleSize, designDimensionSize, separator, debugFlag)
 
   !!! REFACTORING HERE
-  open(newunit=u, file="./data/DATA_predict")
+  open(newunit=u, file=predictionDataInputFile)
 
-  read (u,*) (x_p(i,:), obs_type_p(i), t_p(i), i=1,prediction_sample_size)
+  read (u,*) (predictionDataMatrix(i,:), predictionDataObservationTypeVector(i), predictionLastVector(i), i=1,predictionSampleSize)
 
   close(u)
 
   open(newunit=u, file="../train/data/DATA_TRAIN")
 
-  read (u,*) (x(i,:), obs_type(i), t(i), i=1,n)
+  read (u,*) (designMatrix(i,:), trainingDataObservationTypeVector(i), responseVector(i), i=1,trainingSampleSize)
 
   close(u)
 
-  meanx = mean(x(:,1),n)
-  meany = mean(t,n)
-  stdx  = std(x(:,1),meanx,n)
-  stdy  = std(t,meany,n)
+  meanx = mean(designMatrix(:,1),trainingSampleSize)
+  meany = mean(responseVector,trainingSampleSize)
+  stdx  = std(designMatrix(:,1),meanx,trainingSampleSize)
+  stdy  = std(responseVector,meany,trainingSampleSize)
 
-  lt = logistic_vector(t,n)  ! lt = identity_vector(t,n),  which is not used in matlab, currently matlab code is using identify fun, change for all logistic and inv_logistic_vector in fortrune code.
-  meanlt = mean(lt,n)
-  stdlt  = std(lt,meanlt,n)
+  lt = logistic_vector(responseVector,trainingSampleSize)
+  meanlt = mean(lt,trainingSampleSize)
+  stdlt  = std(lt,meanlt,trainingSampleSize)
 
-  t_p = logistic_vector(t_p,prediction_sample_size)
-  t_p = standardize(t_p,meanlt,stdlt,prediction_sample_size)
+  predictionLastVector = logistic_vector(predictionLastVector,predictionSampleSize)
+  predictionLastVector = standardize(predictionLastVector,meanlt,stdlt,predictionSampleSize)
 
-  x_p(:,1) = standardize(x_p(:,1),meanx,stdx,prediction_sample_size)
+  predictionDataMatrix(:,1) = standardize(predictionDataMatrix(:,1),meanx,stdx,predictionSampleSize)
 
-  meanx = mean(x(:,2),n)
-  stdx  = std(x(:,2),meanx,n)
-  x_p(:,2) = standardize(x_p(:,2),meanx,stdx,prediction_sample_size)
+  meanx = mean(designMatrix(:,2),trainingSampleSize)
+  stdx  = std(designMatrix(:,2),meanx,trainingSampleSize)
+  predictionDataMatrix(:,2) = standardize(predictionDataMatrix(:,2),meanx,stdx,predictionSampleSize)
 
-  meanx = mean(x(:,3),n)
-  stdx  = std(x(:,3),meanx,n)
-  x_p(:,3) = standardize(x_p(:,3),meanx,stdx,prediction_sample_size)
+  meanx = mean(designMatrix(:,3),trainingSampleSize)
+  stdx  = std(designMatrix(:,3),meanx,trainingSampleSize)
+  predictionDataMatrix(:,3) = standardize(predictionDataMatrix(:,3),meanx,stdx,predictionSampleSize)
 
-  meanx = mean(x(:,4),n)
-  stdx  = std(x(:,4),meanx,n)
-  x_p(:,4) = standardize(x_p(:,4),meanx,stdx,prediction_sample_size)
+  meanx = mean(designMatrix(:,4),trainingSampleSize)
+  stdx  = std(designMatrix(:,4),meanx,trainingSampleSize)
+  predictionDataMatrix(:,4) = standardize(predictionDataMatrix(:,4),meanx,stdx,predictionSampleSize)
 
-  meanx = mean(x(:,5),n)
-  stdx  = std(x(:,5),meanx,n)
-  x_p(:,5) = standardize(x_p(:,5),meanx,stdx,prediction_sample_size)
+  meanx = mean(designMatrix(:,5),trainingSampleSize)
+  stdx  = std(designMatrix(:,5),meanx,trainingSampleSize)
+  predictionDataMatrix(:,5) = standardize(predictionDataMatrix(:,5),meanx,stdx,predictionSampleSize)
 
-  meanx = mean(x(:,6),n)
-  stdx  = std(x(:,6),meanx,n)
-  x_p(:,6) = standardize(x_p(:,6),meanx,stdx,prediction_sample_size)
+  meanx = mean(designMatrix(:,6),trainingSampleSize)
+  stdx  = std(designMatrix(:,6),meanx,trainingSampleSize)
+  predictionDataMatrix(:,6) = standardize(predictionDataMatrix(:,6),meanx,stdx,predictionSampleSize)
 
   rmse = predicttestset()
   print *, 'rmse: ',rmse
@@ -118,15 +124,16 @@ contains
     real(dp) :: rmse
     real(dp) prdct
     rmse = 0
-    do i = 1,prediction_sample_size
-       prdct = gp%predict(x_p(i,:), 0)
-       rmse = rmse + ( inv_logistic(unstandardize_s(prdct,meanlt,stdlt))-inv_logistic(unstandardize_s(t_p(i),meanlt,stdlt) ) )**2
-       print *, x_p(i,:)
+    do i = 1,predictionSampleSize
+       prdct = gp%predict(predictionDataMatrix(i,:), 0)
+       rmse = rmse + ( inv_logistic(unstandardize_s(prdct,meanlt,stdlt))&
+       -inv_logistic(unstandardize_s(predictionLastVector(i),meanlt,stdlt) ) )**2
+       print *, predictionDataMatrix(i,:)
       print *, inv_logistic(unstandardize_s(prdct,meanlt,stdlt))
        print *, unstandardize_s(prdct,meanlt,stdlt)
-       print *, inv_logistic(unstandardize_s(t_p(i),meanlt,stdlt ) )
+       print *, inv_logistic(unstandardize_s(predictionLastVector(i),meanlt,stdlt ) )
     end do
-    rmse = rmse / prediction_sample_size
+    rmse = rmse / predictionSampleSize
     rmse = sqrt(rmse)
   end function
 
