@@ -2,6 +2,7 @@
 	trainingDataInputFile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL3Day/DATA/0/DATA_train"
 	trainedEmulatorGPFile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL3Day/DATA/0/out.gp"
 	predictionDataInputFile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL3Day/DATA/0/DATA_predict"
+	predictionOutputFile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL3Day/DATA/0/DATA_predict_output"
 
 	separator  = " "
 	debugFlag  = .false.

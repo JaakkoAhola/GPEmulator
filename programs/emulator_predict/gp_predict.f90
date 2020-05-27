@@ -11,13 +11,15 @@ program gp_predict
     character(len=1000) :: trainingDataInputFile
     character(len=1000) :: trainedEmulatorGPFile
     character(len=1000) :: predictionDataInputFile
+    character(len=1000) :: predictionOutputFile
     character(len=1) :: separator
     logical :: debugFlag
 
     NAMELIST /inputoutput/  &
                       trainingDataInputFile, & ! training data
                       trainedEmulatorGPFile, & ! gp data of emulator training
-                      predictionDataInputFile, & ! prediction data, i.e. points where you want your emulator to be used
+                      predictionDataInputFile, & ! prediction input data, i.e. points where you want your emulator to be used
+                      predictionOutputFile, & ! output of prediction
                       separator,  & ! separator of data file
                       debugFlag
 
@@ -57,7 +59,9 @@ program gp_predict
     !!!! READ TRAINING DATA !!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! set dimension integers for training data
-    call readFileDimensions( trainingDataInputFile, trainingSampleSize, trainingDimensionSize, separator, debugFlag)
+    call readFileDimensions( trainingDataInputFile, &
+                            trainingSampleSize, trainingDimensionSize, &
+                            separator, debugFlag)
 
     designDimensionSize = trainingDimensionSize-2
 
@@ -83,7 +87,9 @@ program gp_predict
     !!!! READ PREDICTION DATA !!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! set dimension integers for prediction data
-    call readFileDimensions( predictionDataInputFile, predictionSampleSize, predictionDimensionSize, separator, debugFlag)
+    call readFileDimensions( predictionDataInputFile, &
+                            predictionSampleSize, predictionDimensionSize, &
+                            separator, debugFlag)
 
     predictionSubMatrixDimensionsSize = predictionDimensionSize - 2
 
@@ -113,13 +119,13 @@ program gp_predict
     predictionLastVector = logistic_vector(predictionLastVector,predictionSampleSize)
     predictionLastVector = standardize(predictionLastVector,meanlt,stdlt,predictionSampleSize)
 
-    do ind=1,predictionDimensionSize
+    do ind=1,predictionSubMatrixDimensionsSize
         meanx = mean(designMatrix(:,ind),trainingSampleSize)
         stdx  = std(designMatrix(:,ind),meanx,trainingSampleSize)
         predictionSubMatrix(:,ind) = standardize(predictionSubMatrix(:,ind),meanx,stdx,predictionSampleSize)
     end do
 
-    rmse = predicttestset()
+    rmse = predicttestset(predictionOutputFile)
     print *, 'rmse: ',rmse
 
     print *, 'thetas: ',gp%theta
@@ -131,19 +137,25 @@ program gp_predict
 
 contains
 
-    function predicttestset() result(rmse)
+    function predicttestset(predictionOutputFile) result(rmse)
         real(dp) :: rmse
         real(dp) prdct
+        integer :: ioStatusCode
+        character(len=1000) :: predictionOutputFile
         rmse = 0
-        do i = 1,predictionSampleSize
-            prdct = gp%predict(predictionSubMatrix(i,:), 0)
-            rmse = rmse + ( inv_logistic(unstandardize_s(prdct,meanlt,stdlt))&
-            -inv_logistic(unstandardize_s(predictionLastVector(i),meanlt,stdlt) ) )**2
-            print *, predictionSubMatrix(i,:)
-            print *, inv_logistic(unstandardize_s(prdct,meanlt,stdlt))
-            print *, unstandardize_s(prdct,meanlt,stdlt)
-            print *, inv_logistic(unstandardize_s(predictionLastVector(i),meanlt,stdlt ) )
-        end do
+        open  (14,status='new',file=predictionOutputFile, iostat = ioStatusCode)
+            do i = 1,predictionSampleSize
+                prdct = gp%predict(predictionSubMatrix(i,:), 0)
+                rmse = rmse + ( inv_logistic(unstandardize_s(prdct,meanlt,stdlt))&
+                -inv_logistic(unstandardize_s(predictionLastVector(i),meanlt,stdlt) ) )**2
+                print *, predictionSubMatrix(i,:)
+                print *, inv_logistic(unstandardize_s(prdct,meanlt,stdlt))
+                print *, unstandardize_s(prdct,meanlt,stdlt)
+                print *, inv_logistic(unstandardize_s(predictionLastVector(i),meanlt,stdlt ) )
+
+                write(14,*) unstandardize_s(prdct,meanlt,stdlt)
+            end do
+        close(14)
         rmse = rmse / predictionSampleSize
         rmse = sqrt(rmse)
     end function
