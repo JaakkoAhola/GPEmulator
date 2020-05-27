@@ -1,8 +1,8 @@
 &inputoutput
-	trainingDataInputFile = "DATA_TRAIN"
-	trainedEmulatorGPFile = "../emulator_train/out.gp"
-	predictionDataInputFile = "DATA_PREDICT"
+	trainingDataInputFile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL3Day/DATA/0/DATA_train"
+	trainedEmulatorGPFile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL3Day/DATA/0/out.gp"
+	predictionDataInputFile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL3Day/DATA/0/DATA_predict"
 
 	separator  = " "
-	debugFlag  = .TRUE.
+	debugFlag  = .false.
 /

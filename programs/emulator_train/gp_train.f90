@@ -54,22 +54,40 @@ program gp_in
     class(cov_fn), allocatable :: cf
     class(noise_model), allocatable :: nm
 
+    !!!!!!!!!!!!!!!!! END OF DECLARATIONS
 
+    ! READ NAMELIST
     open  (1,status='old',file='NAMELIST.nml', iostat = ioStatusCode)
-    if ( ioStatusCode /= 0 ) stop "Error opening NAMELIST.nml file"
-    read  (1, nml=inputoutput)
+        if ( ioStatusCode /= 0 ) stop "Error opening NAMELIST.nml file"
+        read  (1, nml=inputoutput)
     close (1)
 
-    write(*,*) "trainingDataInputFile: ", trim(trainingDataInputFile)
-    write(*,*) "trainedEmulatorGPFile: ", trim(trainedEmulatorGPFile)
-
+    ! set dimension integers
     call readFileDimensions( trainingDataInputFile, trainingSampleSize, trainingDimensionSize, separator, debugFlag)
 
-    write(*,*) "rows: ", trainingSampleSize
-    write(*,*) "columns: ", trainingDimensionSize
     designDimensionSize = trainingDimensionSize-2
 
+    ! allocate matrices & vectors according to dimensions
     allocate( real(dp) :: trainingDataMatrix( trainingSampleSize, trainingDimensionSize ) )
+    allocate(real(dp) :: designMatrix(trainingSampleSize,designDimensionSize))
+    allocate(integer :: trainingDataObservationTypeVector(trainingSampleSize))
+    allocate(real(dp) :: responseVector(trainingSampleSize))
+    allocate(real(dp) :: tmpArray(trainingSampleSize))
+
+    ! assign array values
+    call readArray(trainingDataInputFile, trainingDataMatrix, separator, debugFlag)
+
+    designMatrix(:,:) = trainingDataMatrix(:, 1:designDimensionSize)
+    trainingDataObservationTypeVector(:) = int(trainingDataMatrix(:, trainingDimensionSize-1 ))
+    responseVector(:) = trainingDataMatrix(:, trainingDimensionSize)
+
+    ! Transform response and design here
+    responseVector = standardize(responseVector,trainingSampleSize)
+    do ind=1,designDimensionSize
+        tmpArray = standardize( designMatrix(:,ind), trainingSampleSize )
+        designMatrix(:,ind) = tmpArray
+    end do
+    !!!!!!!!!!!!!!!!!!!!!!!! END OF READING INPUT DATA
 
     call string_to_cov_fn(covariance_function, cf)
     call string_to_noise_model(noise_model_name, nm)
@@ -81,14 +99,9 @@ program gp_in
     allocate(real(dp) :: theta(ntheta))
     allocate(real(dp) :: lbounds(nnu + ntheta))
     allocate(real(dp) :: ubounds(nnu + ntheta))
-    allocate(real(dp) :: responseVector(trainingSampleSize))
-    allocate(real(dp) :: designMatrix(trainingSampleSize,designDimensionSize))
-    allocate(integer :: trainingDataObservationTypeVector(trainingSampleSize))
-    allocate(real(dp) :: tmpArray(trainingSampleSize))
 
     nu = 0.001
     theta = tmpTheta(1:designDimensionSize+1)
-    if (debugFlag) print*, "theta", theta
     lbounds(1) = 0.001
     lbounds(2:) = 0.01
     ubounds(:) = 100.0
@@ -98,29 +111,16 @@ program gp_in
     optimize_max_iter = 10000
     optimize_ftol = 1.0d-7
 
-    call readArray(trainingDataInputFile, trainingDataMatrix, separator, debugFlag)
 
-    if (debugFlag) then
+    if ( debugFlag ) then
+        write(*,*) "trainingDataInputFile: ", trim(trainingDataInputFile)
+        write(*,*) "trainedEmulatorGPFile: ", trim(trainedEmulatorGPFile)
+        write(*,*) "rows: ", trainingSampleSize
+        write(*,*) "columns: ", trainingDimensionSize
         print*, "trainingDataMatrix(1,:)", trainingDataMatrix(1,:)
         print*, "trainingDataMatrix(2,:)", trainingDataMatrix(2,:)
         print*, "shape designMatrix", shape(designMatrix)
         print*, "shape trainingDataMatrix", shape(trainingDataMatrix)
-    end if
-
-    designMatrix(:,:) = trainingDataMatrix(:, 1:designDimensionSize)
-    trainingDataObservationTypeVector(:) = int(trainingDataMatrix(:, trainingDimensionSize-1 ))
-    responseVector(:) = trainingDataMatrix(:, trainingDimensionSize)
-
-
-
-    ! Transform design and response here
-    responseVector = standardize(responseVector,trainingSampleSize)
-    do ind=1,designDimensionSize
-        tmpArray = standardize( designMatrix(:,ind), trainingSampleSize )
-        designMatrix(:,ind) = tmpArray
-    end do
-
-    if ( debugFlag ) then
         print*, "100's design second variable", designMatrix(100, 2)
         print*, "100's obs type", trainingDataObservationTypeVector(100)
         print*, "100's response", responseVector(100)
@@ -132,7 +132,7 @@ program gp_in
         print*, "optimize_max_iter", optimize_max_iter
         print*, "optimize_ftol", optimize_ftol
     end if
-    !stop
+
     allocate(gp, source=DenseGP(nu, theta, designMatrix, trainingDataObservationTypeVector, responseVector, cf, nm))
 
 

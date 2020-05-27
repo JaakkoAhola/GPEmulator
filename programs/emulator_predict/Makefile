@@ -3,8 +3,22 @@ MOD = ../../obj
 LIB = ../../lib
 LIBUSER = ../lib_user
 
-FCFLAGS = -std=f2008 -Wall -Wextra -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow,denormal -fbounds-check -g -I$(MOD) -I../../include -I$(LIBUSER) -I/usr/local/include
-# for debug replace -O3 with -fbounds-check -g -ffpe-trap=invalid,zero,overflow,underflow,denormal
+
+ifndef $(RUNTYPE)
+	RUNTYPE=normal
+endif
+
+$(info $$RUNTYPE is [${RUNTYPE}])
+
+ifeq ($(RUNTYPE),normal)
+	RUNTYPEFLAGS = -O3
+else
+	# debug
+	RUNTYPEFLAGS = -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow,denormal -fbounds-check -g
+endif
+
+FCFLAGS = -std=f2008 -Wall -Wextra $(RUNTYPEFLAGS) -I$(MOD) -I../../include -I$(LIBUSER) -I/usr/local/include
+
 FCLINKFLAGS = $(LIBUSER)/readio.o -L$(LIB) -L/usr/local/lib -lgpf -lnlopt -llapack -lblas
 
 gp_predict: gp_predict.f90
