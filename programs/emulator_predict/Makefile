@@ -3,7 +3,6 @@ MOD = ../../obj
 LIB = ../../lib
 LIBUSER = ../lib_user
 
-
 ifndef $(RUNTYPE)
 	RUNTYPE=normal
 endif
@@ -21,7 +20,7 @@ FCFLAGS = -std=f2008 -Wall -Wextra $(RUNTYPEFLAGS) -I$(MOD) -I../../include -I$(
 
 FCLINKFLAGS = $(LIBUSER)/readio.o -L$(LIB) -L/usr/local/lib -lgpf -lnlopt -llapack -lblas
 
-gp_predict: gp_predict.f90
+gp_predict: gp_predict.o
 	$(FC) -o $@ $^ $(FCFLAGS) $(FCLINKFLAGS)
 
 %.o : %.f90

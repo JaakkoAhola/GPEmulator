@@ -48,8 +48,8 @@ program gp_predict
     ! designDimensionSize = 6
 
     ! READ NAMELIST
-    open  (1,status='old',file='NAMELIST.nml', iostat = ioStatusCode)
-        if ( ioStatusCode /= 0 ) stop "Error opening NAMELIST.nml file"
+    open  (1,status='old',file='predict.nml', iostat = ioStatusCode)
+        if ( ioStatusCode /= 0 ) stop "Error opening predict.nml file"
         read  (1, nml=inputoutput)
     close (1)
 

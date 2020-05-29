@@ -57,8 +57,8 @@ program gp_in
     !!!!!!!!!!!!!!!!! END OF DECLARATIONS
 
     ! READ NAMELIST
-    open  (1,status='old',file='NAMELIST.nml', iostat = ioStatusCode)
-        if ( ioStatusCode /= 0 ) stop "Error opening NAMELIST.nml file"
+    open  (1,status='old',file='train.nml', iostat = ioStatusCode)
+        if ( ioStatusCode /= 0 ) stop "Error opening train.nml file"
         read  (1, nml=inputoutput)
     close (1)
 
