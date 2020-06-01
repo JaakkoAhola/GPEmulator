@@ -101,6 +101,8 @@ program gp_predict
 
 
     ! extract values from prediction data to suitable arrays
+    call readArray(predictionDataInputFile, predictionDataMatrix, separator, debugFlag)
+
     predictionSubMatrix(:,:) = predictionDataMatrix(:, 1:predictionSubMatrixDimensionsSize)
     predictionDataObservationTypeVector(:) = int(predictionDataMatrix(:, predictionDimensionSize-1 ))
     predictionLastVector(:) = predictionDataMatrix(:, predictionDimensionSize)
@@ -112,7 +114,7 @@ program gp_predict
     meany = mean(responseVector,trainingSampleSize)
     stdy  = std(responseVector,meany,trainingSampleSize)
 
-    logisticVector = logistic_vector(responseVector,trainingSampleSize)
+    logisticVector = responseVector
     meanlt = mean(logisticVector,trainingSampleSize)
     stdlt  = std(logisticVector,meanlt,trainingSampleSize)
 
