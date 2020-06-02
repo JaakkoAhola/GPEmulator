@@ -1,6 +1,0 @@
-&inputoutput
-	inputfile = "DATA_TRAIN"
-	outputfile = "out.gp"
-	separator  = " "
-	debugFlag  = .TRUE.
-/

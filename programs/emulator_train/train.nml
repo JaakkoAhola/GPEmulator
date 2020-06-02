@@ -1,0 +1,7 @@
+&inputoutput
+	trainingDataInputFile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL4Night/DATA/0/DATA_train"
+
+	trainedEmulatorGPFile = "/home/aholaj/Nextcloud/000_WORK/000_ARTIKKELIT/001_Manuscript_LES_emulator/data/LVL4Night/DATA/0/out.gp"
+	separator  = " "
+	debugFlag  = .FALSE.
+/
