@@ -3,20 +3,55 @@
 # Additions by Jaakko Ahola et al. 2020
 
 This code is based on: [https://github.com/ots22/gpf/](https://github.com/ots22/gpf/)
+We ran this code on Ubuntu 18.04.
 
-1. First compile libraries according to the original readme shown below.
+1. First compile libraries. More information in section: Original Readme.
 
-2. Compile data reading library in the folder: [programs/lib_user](programs/lib_user)
+    - prerequisits
+        1. install gfortran
+        2. install cmake
+        3. install build-essential
 
-3. Training the emulator is in folder: [programs/emulator_train](programs/emulator_train)
+    - libraries are installed in a `$GPLIBRALY` of your choosing
+
+    - LAPACK installation
+        - `git clone https://github.com/Reference-LAPACK/lapack`
+        - `cd lapack`
+        - `cp make.inc.example make.inc`
+        -  `ulimit -s unlimited` \# don't limit memory in compiling
+        - `make`
+
+
+
+    - NLOPT installation
+        - `git clone https://github.com/stevengj/nlopt.git`
+        - `cd nlopt`
+        - `mkdir build`
+        - `cd build`
+        - `cmake ..`
+        - `make`
+        - `sudo make install`
+
+
+    - makedepf90 installation
+        - `sudo apt-get install makedepf90`
+
+2. Installation of library files in this repository
+    - `git clone https://github.com/JaakkoAhola/GPEmulator` \# use given or latest release
+    - `make all`
+
+
+3. Compile data reading library in the folder: [programs/lib_user](programs/lib_user)
+
+4. Training the emulator is in folder: [programs/emulator_train](programs/emulator_train)
     * compile with command `make gp_train`
-    * set input and output parameters in [Namelist](programs/emulator_train/NAMELIST.nml)
+    * set input and output parameters in [Namelist](programs/emulator_train/train.nml)
     * run program with `./gp_train`
-4. Predictor for emulator is in folder: [programs/emulator_predict](programs/emulator_predict)
+5. Predictor for emulator is in folder: [programs/emulator_predict](programs/emulator_predict)
     * compile with command: `make gp_predict`
-    * set input and output parameters in [Namelist](programs/emulator_predict/NAMELIST.nml)
+    * set input and output parameters in [Namelist](programs/emulator_predict/predict.nml)
 
-# Readme from original
+# Original readme:
 
 GPF is a small Fortran library for Gaussian process regression.  It currently
 implements value predictions with dense Gaussian processes, and projected-process
